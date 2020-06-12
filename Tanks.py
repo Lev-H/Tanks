@@ -2,10 +2,16 @@ from tkinter import *
 from tkinter import messagebox as mb
 from threading import Timer
 from enum import Enum
+import pygame
 
+pygame.init()
 shellr = 5
 shellSpeed = 20
 tankshells = []
+sndfile = 'snd/SoundShoot.wav'
+SoundShoot = pygame.mixer.Sound(sndfile)
+sndfile1 = 'snd/SoundBirst.wav'
+SoundBerst = pygame.mixer.Sound(sndfile1)
 
 def keypress(event):
     global tank1
@@ -27,8 +33,10 @@ def keypress(event):
     elif(event.keycode == 65):
         TankMove(tank2, "left")
     if(event.keycode == 13):
+        SoundShoot.play()
         Shoot(tank1)
     elif(event.keycode == 32):
+        SoundShoot.play()
         Shoot(tank2)
 
 def Shoot(tank):
@@ -54,6 +62,7 @@ def OnTimer():
 
 def MoveShells():
     global tankshells
+    global landshape
     DeleteShells(tankshells)
     if(WinOrLose() == False):
         for shell in tankshells:
@@ -67,6 +76,12 @@ def MoveShells():
                 shell[0] -= shellSpeed
             if(shell[1] + shellr >= 500 or shell[1]  - shellr <= 0 or shell[0] + shellr >= 500 or shell[0] - shellr <= 0):
                 tankshells.remove(shell)
+            for i in landshape:
+                x = i[0]
+                y = i[1]
+                if(shell[1] - shellr <= y and shell[1] - shellr > y - 20 and shell[0] - shellr >= x - 20 and shell[0] + shellr <= x):
+                    tankshells.remove(shell)
+                    DrawLevel(landshape)
     else:
         return False
     DrawShells(tankshells)
@@ -119,10 +134,12 @@ def WinOrLose():
         return False
 
 def WinOrLoseDialog(end):
-    if(end == 1):
-        mb.showinfo(title = 'Game over!', message = 'Player 2 WIN!')
-    elif(end == 2):
-        mb.showinfo(title = 'Game over!', message = 'Player 1 WIN!')
+        if(end == 1):
+            SoundBerst.play()
+            mb.showinfo(title = 'Game over!', message = 'Player 2 WIN!')
+        elif(end == 2):
+            SoundBerst.play()
+            mb.showinfo(title = 'Game over!', message = 'Player 1 WIN!')
 
 def TankMove(tank, WhereGo):
     DeleteTank(tank)
@@ -148,6 +165,20 @@ def TankMove(tank, WhereGo):
         tank[4] = direction.Left
     DrawTank(tank)
 
+def LoadLevel(lvl):
+    landshape = {}
+    f = open('levels/lvl' + str(lvl) + '.txt')
+    for line in f:
+        line1 = line[:-1]
+        line2 = line1.split()
+        line2 = int(line2[0]) * 20, int(line2[1]) * 20
+        landshape[line2] = "red"
+    return landshape
+
+def DrawLevel(landshape):
+    for i in landshape.keys():
+        c.create_rectangle(int(i[0]) - 20, int(i[1]) - 20, int(i[0]), int(i[1]), fill = 'red')
+
 def DrawTank(tank):
     c.create_rectangle(tank[0] - 20, tank[1] - 20, tank[0] + 20, tank[1] + 20)
     if(tank[4] == direction.Up or tank[4] == direction.Down):
@@ -172,7 +203,7 @@ def DeleteShells(tankshells):
 
 root = Tk()
 root.title('Tanks')
-c = Canvas(root, width=500, height=500, bg='white')
+c = Canvas(root, width = 500, height = 500, bg = 'white')
 c.pack()
 
 #Make tanks
@@ -185,6 +216,10 @@ tank1 = [65, 445, 65, 413, direction.Up]
 tank2 = [445, 65, 445, 97, direction.Down]
 DrawTank(tank1)
 DrawTank(tank2)
+
+lvl = 1
+landshape = LoadLevel(lvl)
+DrawLevel(landshape)
 
 #Make click W, S, A, D, up, down, right, left, space and enter
 root.bind('<Key>', keypress)
