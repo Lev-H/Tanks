@@ -65,12 +65,10 @@ def OnTimer():
 def MoveShells():
     global tankshells
     global landshape
-    global tank1
-    global tank2
     DeleteShells(tankshells)
     if(WinOrLose() == False):
         for shell in tankshells:
-            if CheckMove(shell, shell[2], type = "shell"):
+            if CheckMove(shell, shell[2], "shell"):
                 if(shell[2] == direction.Up):
                     shell[1] -= shellSpeed
                 elif(shell[2] == direction.Down):
@@ -79,7 +77,7 @@ def MoveShells():
                     shell[0] += shellSpeed
                 elif (shell[2] == direction.Left):
                     shell[0] -= shellSpeed
-                if(shell[1] + shellr >= 500 or shell[1]  - shellr <= 0 or shell[0] + shellr >= 500 or shell[0] - shellr <= 0):
+                if(shell[1] + shellr >= 600 or shell[1]  - shellr <= 0 or shell[0] + shellr >= 600 or shell[0] - shellr <= 0):
                     tankshells.remove(shell)
             else:
                 tankshells.remove(shell)
@@ -176,7 +174,6 @@ def TankMove(tank, WhereGo):
 
 def CheckMove(object, WhereGo, type):
     global landshape
-    global border
     objectx = object[0]
     objecty = object[1]
     if (WhereGo == direction.Up):
@@ -197,12 +194,21 @@ def CheckMove(object, WhereGo, type):
                     DestroyLevel(i)
                     landshape.pop(i)
                     DrawLevel(landshape)
+                elif(i[2] == 2):
+                    DrawLevel(landshape)
+                    return True
+                elif(i[2] == 3):
+                    DrawLevel(landshape)
+                    return True
+            elif(type == "tank"):
+                if(i[2] == 3):
+                    DrawLevel(landshape)
+                    return True
             return False
     return True
 
 def LoadLevel(lvl):
     landshape = {}
-    border = []
     f = open('levels/lvl' + str(lvl) + '.txt')
     for line in f:
         line1 = line[:-1]
@@ -216,14 +222,11 @@ def LoadLevel(lvl):
             landshape[line3] = "blue"
         elif(line2[2] == '3'):
             landshape[line3] = "green"
-        elif(line2[2] == '4'):
-            border.append(line3[0])
-    return landshape, border
+    return landshape
 
 def DrawLevel(landshape):
     for i in landshape.keys():
-        if(i[2] != '4'):
-            c.create_rectangle(int(i[0]) - landscapesize, int(i[1]) - landscapesize, int(i[0]), int(i[1]), fill=str(landshape[i]))
+        c.create_rectangle(int(i[0]) - landscapesize, int(i[1]) - landscapesize, int(i[0]), int(i[1]), fill=str(landshape[i]))
 
 def DestroyLevel(elem):
     c.create_rectangle(int(elem[0]) - landscapesize, int(elem[1]) - landscapesize, int(elem[0]), int(elem[1]), fill='white', outline = 'white')
@@ -267,7 +270,7 @@ DrawTank(tank1)
 DrawTank(tank2)
 
 lvl = 1
-landshape, border = LoadLevel(lvl)
+landshape = LoadLevel(lvl)
 DrawLevel(landshape)
 
 #Make click W, S, A, D, up, down, right, left, space and enter
